@@ -15,7 +15,6 @@ class Marca(Base):
     )
     observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    if False:  # pragma: no cover – forward-ref guard until Devolucao is defined
-        devolucoes: Mapped[list["Devolucao"]] = relationship(  # type: ignore
-            back_populates="marca", cascade="all"
-        )
+    devolucoes: Mapped[list["Devolucao"]] = relationship(  # type: ignore
+        back_populates="marca", cascade="all"
+    )

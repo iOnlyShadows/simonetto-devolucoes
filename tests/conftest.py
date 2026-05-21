@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app import db as db_module
 from app.models.base import Base
+import app.models  # noqa: F401 – ensures all models are registered in Base.metadata
 
 
 @pytest.fixture(autouse=True)
