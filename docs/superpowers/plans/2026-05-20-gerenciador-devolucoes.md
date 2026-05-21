@@ -315,7 +315,7 @@ git commit -m "feat(config): resolucao de paths + persistencia em config.json"
 
 Sem teste — é só constante. Erro de digitação aparece imediatamente nos testes que consomem.
 
-- [ ] **Step 1: Escrever `app/constants.py`**
+- [x] **Step 1: Escrever `app/constants.py`**
 
 ```python
 from enum import Enum
@@ -372,14 +372,14 @@ BACKUP_RETENCAO_DEFAULT = 30
 BANNER_BACKUP_ALERTA_DIAS = 7
 ```
 
-- [ ] **Step 2: Sanity check**
+- [x] **Step 2: Sanity check**
 
 ```bash
 uv run python -c "from app.constants import StatusProcesso; print(StatusProcesso.SINALIZADO.value)"
 ```
 Expected: `sinalizado`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/constants.py
