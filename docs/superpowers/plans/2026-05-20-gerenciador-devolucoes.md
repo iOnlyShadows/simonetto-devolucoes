@@ -841,7 +841,7 @@ git commit -m "feat(models): Devolucao + Anexo + HistoricoStatus com relacioname
 **Files:**
 - Create: `app/repositories/devolucoes_repo.py`, `tests/test_devolucoes_repo.py`
 
-- [ ] **Step 1: Escrever testes**
+- [x] **Step 1: Escrever testes**
 
 ```python
 # tests/test_devolucoes_repo.py
@@ -922,14 +922,14 @@ def test_busca_textual(session, marca):
     assert len(r2) == 1
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 ```bash
 uv run pytest tests/test_devolucoes_repo.py -v
 ```
 Expected: FAIL (módulo inexistente)
 
-- [ ] **Step 3: Implementar `app/repositories/devolucoes_repo.py`**
+- [x] **Step 3: Implementar `app/repositories/devolucoes_repo.py`**
 
 ```python
 from datetime import datetime
@@ -1016,14 +1016,14 @@ def excluir_definitivo(session: Session, devolucao_id: int) -> bool:
     return True
 ```
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 ```bash
 uv run pytest tests/test_devolucoes_repo.py -v
 ```
 Expected: 4 passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/repositories/devolucoes_repo.py tests/test_devolucoes_repo.py
