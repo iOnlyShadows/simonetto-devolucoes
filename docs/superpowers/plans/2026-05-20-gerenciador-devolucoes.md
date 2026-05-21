@@ -174,7 +174,7 @@ git commit -m "chore: bootstrap projeto com uv e dependencias principais"
 
 A `Config` resolve a pasta de dados (`%LOCALAPPDATA%\SimonettoDevolucoes\` por padrão, ou um path passado via variável de ambiente `SIMONETTO_DATA_DIR` — útil para testes).
 
-- [ ] **Step 1: Escrever teste falhando em `tests/test_config.py`**
+- [x] **Step 1: Escrever teste falhando em `tests/test_config.py`**
 
 ```python
 import json
@@ -212,14 +212,14 @@ def test_config_persists_preferences(tmp_path, monkeypatch):
     assert reloaded.backup_retention == 50
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 ```bash
 uv run pytest tests/test_config.py -v
 ```
 Expected: FAIL (`ModuleNotFoundError: app.config`)
 
-- [ ] **Step 3: Implementar `app/config.py`**
+- [x] **Step 3: Implementar `app/config.py`**
 
 ```python
 import json
@@ -292,14 +292,14 @@ class Config:
         self.config_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 ```
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 ```bash
 uv run pytest tests/test_config.py -v
 ```
 Expected: 3 passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/config.py tests/test_config.py
