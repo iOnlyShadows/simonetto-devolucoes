@@ -157,7 +157,7 @@ uv run python -c "import nicegui, sqlalchemy, PIL, pydantic; print('OK')"
 ```
 Expected: `OK`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add pyproject.toml uv.lock .gitignore .python-version app/ tests/ scripts/
