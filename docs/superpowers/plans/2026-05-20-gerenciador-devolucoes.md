@@ -85,13 +85,13 @@ simonetto_devolucoes/
 - Create: `pyproject.toml`, `.gitignore`, `.python-version`
 - Create: estrutura inicial de pastas (vazias com `__init__.py`)
 
-- [ ] **Step 1: Inicializar projeto com uv**
+- [x] **Step 1: Inicializar projeto com uv**
 
 ```bash
 uv init --python 3.11 --no-readme
 ```
 
-- [ ] **Step 2: Substituir `pyproject.toml` pelo conteúdo abaixo**
+- [x] **Step 2: Substituir `pyproject.toml` pelo conteúdo abaixo**
 
 ```toml
 [project]
@@ -124,7 +124,7 @@ build-backend = "hatchling.build"
 packages = ["app"]
 ```
 
-- [ ] **Step 3: Criar `.gitignore`**
+- [x] **Step 3: Criar `.gitignore`**
 
 ```
 .venv/
@@ -140,7 +140,7 @@ build/
 .dev_data/
 ```
 
-- [ ] **Step 4: Criar estrutura de pastas com __init__.py vazios**
+- [x] **Step 4: Criar estrutura de pastas com __init__.py vazios**
 
 ```bash
 mkdir -p app/models app/repositories app/services app/ui/pages app/ui/components tests scripts
@@ -149,7 +149,7 @@ touch app/__init__.py app/models/__init__.py app/repositories/__init__.py \
       app/ui/components/__init__.py tests/__init__.py
 ```
 
-- [ ] **Step 5: Instalar dependências e validar**
+- [x] **Step 5: Instalar dependências e validar**
 
 ```bash
 uv sync
