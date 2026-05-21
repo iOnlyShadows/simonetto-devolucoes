@@ -520,7 +520,7 @@ git commit -m "feat(db): engine SQLAlchemy + session scope + fixture de testes"
 **Files:**
 - Create: `app/models/marca.py`, `app/repositories/marcas_repo.py`, `tests/test_marcas_repo.py`
 
-- [ ] **Step 1: Escrever teste em `tests/test_marcas_repo.py`**
+- [x] **Step 1: Escrever teste em `tests/test_marcas_repo.py`**
 
 ```python
 import pytest
@@ -572,14 +572,14 @@ def test_atualizar_e_excluir(session):
     assert marcas_repo.buscar_por_id(session, marca.id) is None
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 ```bash
 uv run pytest tests/test_marcas_repo.py -v
 ```
 Expected: FAIL (módulos inexistentes)
 
-- [ ] **Step 3: Criar `app/models/marca.py`**
+- [x] **Step 3: Criar `app/models/marca.py`**
 
 ```python
 from sqlalchemy import Enum, Integer, String, Text
@@ -604,7 +604,7 @@ class Marca(Base):
     )
 ```
 
-- [ ] **Step 4: Criar `app/repositories/marcas_repo.py`**
+- [x] **Step 4: Criar `app/repositories/marcas_repo.py`**
 
 ```python
 from typing import Optional
@@ -649,14 +649,14 @@ def excluir(session: Session, marca_id: int) -> bool:
     return True
 ```
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 ```bash
 uv run pytest tests/test_marcas_repo.py -v
 ```
 Expected: 4 passed
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/models/marca.py app/repositories/marcas_repo.py tests/test_marcas_repo.py
