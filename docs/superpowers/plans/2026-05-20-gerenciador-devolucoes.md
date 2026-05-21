@@ -672,7 +672,7 @@ git commit -m "feat(marca): modelo + repositorio com CRUD basico"
 
 Faço os três modelos juntos porque têm FK entre si e querer testar Devolucao sem os outros vira muambada.
 
-- [ ] **Step 1: Criar `app/models/devolucao.py`**
+- [x] **Step 1: Criar `app/models/devolucao.py`**
 
 ```python
 from datetime import date, datetime
@@ -741,7 +741,7 @@ class Devolucao(Base):
     )
 ```
 
-- [ ] **Step 2: Criar `app/models/historico.py`**
+- [x] **Step 2: Criar `app/models/historico.py`**
 
 ```python
 from datetime import datetime
@@ -767,7 +767,7 @@ class HistoricoStatus(Base):
     devolucao: Mapped["Devolucao"] = relationship(back_populates="historicos")  # type: ignore
 ```
 
-- [ ] **Step 3: Criar `app/models/anexo.py`**
+- [x] **Step 3: Criar `app/models/anexo.py`**
 
 ```python
 from datetime import datetime
@@ -793,7 +793,7 @@ class Anexo(Base):
     devolucao: Mapped["Devolucao"] = relationship(back_populates="anexos")  # type: ignore
 ```
 
-- [ ] **Step 4: Garantir que models são importados (registra no metadata)**
+- [x] **Step 4: Garantir que models são importados (registra no metadata)**
 
 Adicionar em `app/models/__init__.py`:
 
@@ -806,7 +806,7 @@ from app.models.historico import HistoricoStatus
 __all__ = ["Marca", "Devolucao", "Anexo", "HistoricoStatus"]
 ```
 
-- [ ] **Step 5: Sanity check — banco em memória cria todas as tabelas**
+- [x] **Step 5: Sanity check — banco em memória cria todas as tabelas**
 
 Adicionar `tests/test_schema.py`:
 
@@ -827,7 +827,7 @@ uv run pytest tests/test_schema.py -v
 ```
 Expected: 1 passed
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/models/ tests/test_schema.py
