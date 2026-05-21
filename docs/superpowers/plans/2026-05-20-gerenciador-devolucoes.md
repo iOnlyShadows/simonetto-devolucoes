@@ -393,7 +393,7 @@ git commit -m "feat(constants): enums dos 3 eixos + labels + limites"
 **Files:**
 - Create: `app/db.py`, `app/models/base.py`
 
-- [ ] **Step 1: Criar `app/models/base.py`**
+- [x] **Step 1: Criar `app/models/base.py`**
 
 ```python
 from sqlalchemy.orm import DeclarativeBase
@@ -403,7 +403,7 @@ class Base(DeclarativeBase):
     pass
 ```
 
-- [ ] **Step 2: Criar `app/db.py`**
+- [x] **Step 2: Criar `app/db.py`**
 
 ```python
 from contextlib import contextmanager
@@ -463,7 +463,7 @@ def session_scope() -> Iterator[Session]:
         session.close()
 ```
 
-- [ ] **Step 3: Criar `tests/conftest.py` com fixture compartilhada**
+- [x] **Step 3: Criar `tests/conftest.py` com fixture compartilhada**
 
 ```python
 import pytest
@@ -497,14 +497,14 @@ def session(monkeypatch):
         s.close()
 ```
 
-- [ ] **Step 4: Sanity check**
+- [x] **Step 4: Sanity check**
 
 ```bash
 uv run pytest tests/ -v
 ```
 Expected: testes anteriores (3 do Task 2) continuam passando
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/db.py app/models/base.py tests/conftest.py
