@@ -92,8 +92,28 @@ def abrir_detalhe(devolucao_id: int,
         # Anexos
         ui.separator()
         ui.label("Anexos").classes("text-subtitle2")
+
+        def _on_upload_extra(e):
+            from pathlib import Path
+            from tempfile import mkdtemp
+            tmp = Path(mkdtemp()) / e.name  # preserva nome original
+            tmp.write_bytes(e.content.read())
+            try:
+                with session_scope() as s:
+                    anexo_service.salvar_anexo(s, devolucao_id, tmp,
+                                                como_principal=False)
+                ui.notify("Anexo adicionado")
+                dlg.close()
+                abrir_detalhe(devolucao_id, on_save=on_save)
+            except ValueError as err:
+                ui.notify(str(err), type="negative")
+
+        ui.upload(label="+ Adicionar anexo",
+                  on_upload=_on_upload_extra, auto_upload=True) \
+            .props('accept=".pdf,.jpg,.jpeg,.png,.webp"').classes("w-full")
+
         if not dados["anexos"]:
-            ui.label("Nenhum anexo.").classes("text-grey-7")
+            ui.label("Nenhum anexo ainda.").classes("text-grey-7")
         else:
             for aid, nome, caminho, tipo in dados["anexos"]:
                 with ui.row().classes("items-center gap-2"):
