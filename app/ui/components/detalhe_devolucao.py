@@ -23,7 +23,13 @@ def abrir_detalhe(devolucao_id: int,
         if d is None:
             ui.notify("Devolução não encontrada", type="negative")
             return
-        # Carrega tudo agora pra usar fora da sessão
+        # Separa anexos em imagens (ordenadas) e documentos
+        anexos_ordenados = sorted(d.anexos, key=lambda x: (x.ordem, x.criado_em))
+        imagens = [(a.id, a.nome_original, anexo_service.thumb_url_de(a))
+                   for a in anexos_ordenados if a.tipo == "imagem"]
+        documentos = [(a.id, a.nome_original, a.caminho_interno, a.tipo)
+                      for a in anexos_ordenados if a.tipo != "imagem"]
+
         dados = dict(
             id=d.id,
             marca=d.marca.nome,
@@ -43,25 +49,25 @@ def abrir_detalhe(devolucao_id: int,
             destino=d.destino_fisico,
             forma=d.forma_ressarcimento,
             observacoes=d.observacoes,
-            foto=d.foto_principal_caminho,
-            atualizado_em=d.atualizado_em,
-            anexos=[(a.id, a.nome_original, a.caminho_interno, a.tipo) for a in d.anexos],
+            imagens=imagens,
+            documentos=documentos,
         )
         historico = [(h.campo, h.valor_anterior, h.valor_novo, h.data, h.observacao)
                      for h in historico_repo.listar_por_devolucao(s, devolucao_id)]
 
     cfg = Config.load()
 
-    with ui.dialog().props("maximized=false") as dlg, ui.card().classes("w-[700px] max-h-[90vh] overflow-auto"):
+    with ui.dialog().props("maximized=false") as dlg, ui.card().classes("w-[720px] max-h-[90vh] overflow-auto"):
         with ui.row().classes("w-full items-center justify-between"):
             ui.label(f"{dados['marca']} · {dados['modelo']}").classes("text-h6")
             ui.button(icon="close", on_click=dlg.close).props("flat round")
 
-        # Foto + badges
+        # Foto principal (primeira imagem) + badges
         with ui.row().classes("w-full gap-4 items-start"):
-            if dados["foto"]:
-                cache_bust = int(dados["atualizado_em"].timestamp()) if dados.get("atualizado_em") else 0
-                ui.image(f"/dados/{dados['foto']}?t={cache_bust}").classes("w-32 h-32 rounded")
+            if dados["imagens"]:
+                _, _, principal_url = dados["imagens"][0]
+                if principal_url:
+                    ui.image(principal_url).classes("w-32 h-32 rounded")
             with ui.column().classes("gap-2"):
                 ui.label(f"Devolvido em {dados['data_dev'].strftime('%d/%m/%Y')}").classes("text-caption")
                 if dados["referencia"]:
@@ -91,48 +97,115 @@ def abrir_detalhe(devolucao_id: int,
                     cli += f" · {dados['cliente_contato']}"
                 ui.label(f"Cliente: {cli}")
 
-        # Anexos
+        # ────── Galeria de Imagens ──────
         ui.separator()
-        ui.label("Anexos").classes("text-subtitle2")
+        ui.label("Imagens").classes("text-subtitle2")
+        ui.label("A primeira é a que aparece na lista. Use ↑ ↓ para reordenar e ★ para definir como principal.") \
+            .classes("text-caption text-grey-7")
 
-        async def _on_upload_extra(e):
-            from pathlib import Path
+        def _recarregar():
+            dlg.close()
+            abrir_detalhe(devolucao_id, on_save=on_save)
+
+        async def _on_upload_imagem(e):
             from tempfile import mkdtemp
-            nome = e.file.name or "upload.bin"
-            tmp = Path(mkdtemp()) / nome  # preserva nome original
+            nome = e.file.name or "imagem.jpg"
+            tmp = Path(mkdtemp()) / nome
             await e.file.save(tmp)
             try:
                 with session_scope() as s:
-                    anexo_service.salvar_anexo(s, devolucao_id, tmp,
-                                                como_principal=False)
-                ui.notify("Anexo adicionado")
-                dlg.close()
-                abrir_detalhe(devolucao_id, on_save=on_save)
+                    anexo_service.salvar_anexo(s, devolucao_id, tmp)
+                ui.notify("Imagem adicionada")
+                _recarregar()
             except ValueError as err:
                 ui.notify(str(err), type="negative")
 
-        ui.upload(label="+ Adicionar anexo",
-                  on_upload=_on_upload_extra, auto_upload=True) \
-            .props('accept=".pdf,.jpg,.jpeg,.png,.webp"').classes("w-full")
+        ui.upload(label="+ Adicionar imagem", on_upload=_on_upload_imagem,
+                  auto_upload=True) \
+            .props('accept=".jpg,.jpeg,.png,.webp"').classes("w-full")
 
-        if not dados["anexos"]:
-            ui.label("Nenhum anexo ainda.").classes("text-grey-7")
+        if not dados["imagens"]:
+            ui.label("Nenhuma imagem ainda.").classes("text-grey-7")
         else:
-            for aid, nome, caminho, tipo in dados["anexos"]:
+            with ui.row().classes("w-full gap-3 flex-wrap"):
+                for idx, (aid, nome, url) in enumerate(dados["imagens"]):
+                    with ui.card().classes("p-2 w-40"):
+                        if url:
+                            ui.image(url).classes("w-full h-32 object-cover rounded")
+                        ui.label(nome).classes("text-caption truncate w-full")
+                        is_first = (idx == 0)
+                        if is_first:
+                            ui.badge("★ Principal", color="amber").classes("text-white")
+                        with ui.row().classes("gap-1 w-full justify-between"):
+                            def _up(aid=aid):
+                                with session_scope() as s:
+                                    anexo_service.mover_para_cima(s, aid)
+                                _recarregar()
+
+                            def _down(aid=aid):
+                                with session_scope() as s:
+                                    anexo_service.mover_para_baixo(s, aid)
+                                _recarregar()
+
+                            def _principal(aid=aid):
+                                with session_scope() as s:
+                                    anexo_service.definir_como_principal(s, aid)
+                                _recarregar()
+
+                            def _del(aid=aid):
+                                with session_scope() as s:
+                                    anexo_service.remover_anexo(s, aid)
+                                ui.notify("Imagem removida")
+                                _recarregar()
+
+                            ui.button(icon="arrow_upward", on_click=_up) \
+                                .props("flat dense size=sm").tooltip("Subir")
+                            ui.button(icon="arrow_downward", on_click=_down) \
+                                .props("flat dense size=sm").tooltip("Descer")
+                            ui.button(icon="star", on_click=_principal) \
+                                .props("flat dense size=sm color=amber").tooltip("Tornar principal")
+                            ui.button(icon="delete", on_click=_del) \
+                                .props("flat dense size=sm color=red").tooltip("Remover")
+
+        # ────── Documentos (PDFs) ──────
+        ui.separator()
+        ui.label("Documentos").classes("text-subtitle2")
+
+        async def _on_upload_doc(e):
+            from tempfile import mkdtemp
+            nome = e.file.name or "doc.pdf"
+            tmp = Path(mkdtemp()) / nome
+            await e.file.save(tmp)
+            try:
+                with session_scope() as s:
+                    anexo_service.salvar_anexo(s, devolucao_id, tmp)
+                ui.notify("Documento adicionado")
+                _recarregar()
+            except ValueError as err:
+                ui.notify(str(err), type="negative")
+
+        ui.upload(label="+ Adicionar documento", on_upload=_on_upload_doc,
+                  auto_upload=True) \
+            .props('accept=".pdf"').classes("w-full")
+
+        if not dados["documentos"]:
+            ui.label("Nenhum documento ainda.").classes("text-grey-7")
+        else:
+            for aid, nome, caminho, tipo in dados["documentos"]:
                 with ui.row().classes("items-center gap-2"):
-                    ui.icon("picture_as_pdf" if tipo == "pdf" else "image")
+                    ui.icon("picture_as_pdf" if tipo == "pdf" else "insert_drive_file")
                     ui.label(nome)
                     ui.button("Abrir",
                               on_click=lambda _, c=caminho: webbrowser.open(
                                   (cfg.data_dir / c).as_uri())) \
                         .props("flat size=sm")
-                    def _remover(aid=aid):
+
+                    def _remover_doc(aid=aid):
                         with session_scope() as s:
                             anexo_service.remover_anexo(s, aid)
-                        ui.notify("Anexo removido")
-                        dlg.close()
-                        abrir_detalhe(devolucao_id, on_save=on_save)
-                    ui.button("Remover", on_click=_remover).props("flat size=sm color=red")
+                        ui.notify("Documento removido")
+                        _recarregar()
+                    ui.button("Remover", on_click=_remover_doc).props("flat size=sm color=red")
 
         # Observações
         if dados["observacoes"]:

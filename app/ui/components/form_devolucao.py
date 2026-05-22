@@ -42,7 +42,7 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
         "forma_ressarcimento": d.forma_ressarcimento if d else None,
         "observacoes": (d.observacoes if d else "") or "",
     }
-    foto_principal_temp: dict[str, Optional[Path]] = {"path": None}
+    imagens_temp: list[Path] = []
 
     with ui.dialog().props("position=right") as dlg, ui.card().classes("w-[480px] h-screen overflow-auto"):
         ui.label("Editar Devolução" if d else "Nova Devolução").classes("text-h6")
@@ -69,18 +69,20 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
                              format="%.2f").classes("w-full")
         i_defeito = ui.input("Defeito", value=valores["defeito_descricao"]).classes("w-full")
 
-        async def _on_upload_foto(e: events.UploadEventArguments):
-            # Escreve bytes do upload num temp file preservando o nome original.
+        async def _on_upload_imagem(e: events.UploadEventArguments):
+            # Cada imagem cai aqui (multi-upload). Vão pra galeria na ordem do upload.
             from tempfile import mkdtemp
-            nome = e.file.name or "upload.bin"
+            nome = e.file.name or "imagem.jpg"
             tmp_dir = Path(mkdtemp())
             tmp = tmp_dir / nome
             await e.file.save(tmp)
-            foto_principal_temp["path"] = tmp
-            ui.notify(f"Foto principal selecionada: {nome}")
+            imagens_temp.append(tmp)
+            ui.notify(f"Imagem adicionada: {nome}")
 
-        ui.upload(label="Foto principal", on_upload=_on_upload_foto, auto_upload=True,
-                  max_files=1).props('accept=".jpg,.jpeg,.png,.webp"').classes("w-full")
+        ui.label("Imagens (opcional) — a primeira será a principal").classes("text-caption text-grey-7")
+        ui.upload(label="+ Imagens", on_upload=_on_upload_imagem,
+                  auto_upload=True, multiple=True) \
+            .props('accept=".jpg,.jpeg,.png,.webp"').classes("w-full")
 
         # Datas
         ui.separator()
@@ -174,12 +176,11 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
                     s.flush()
                     novo_id = nova.id
 
-                if foto_principal_temp["path"]:
+                for img_path in imagens_temp:
                     try:
-                        anexo_service.salvar_anexo(s, novo_id, foto_principal_temp["path"],
-                                                    como_principal=True)
+                        anexo_service.salvar_anexo(s, novo_id, img_path)
                     except Exception as e:
-                        ui.notify(f"Erro na foto principal: {e}", type="warning")
+                        ui.notify(f"Erro ao salvar imagem {img_path.name}: {e}", type="warning")
 
             ui.notify("Salvo", type="positive")
             dlg.close()

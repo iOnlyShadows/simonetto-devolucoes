@@ -104,12 +104,16 @@ def render():
                         aguardando_retorno=True if filtros["aguardando"] else None,
                         busca=filtros["busca"] or None,
                     )
+                    from app.services import anexo_service
                     dados = []
                     for d in devs:
-                        # Cache-buster com atualizado_em pra forçar reload quando troca a foto
-                        cache_bust = int(d.atualizado_em.timestamp()) if d.atualizado_em else 0
-                        thumb = f"/dados/{d.foto_principal_caminho}?t={cache_bust}" \
-                            if d.foto_principal_caminho else None
+                        # Pega a primeira imagem (menor ordem) como thumbnail
+                        primeira_imagem = next(
+                            (a for a in sorted(d.anexos, key=lambda x: (x.ordem, x.criado_em))
+                             if a.tipo == "imagem"),
+                            None
+                        )
+                        thumb = anexo_service.thumb_url_de(primeira_imagem) if primeira_imagem else None
                         dados.append({
                             "id": d.id,
                             "marca": d.marca.nome,

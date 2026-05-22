@@ -30,7 +30,19 @@ def init_engine(database_url: Optional[str] = None) -> Engine:
 
     _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False, future=True)
     Base.metadata.create_all(_engine)
+    _aplicar_migracoes(_engine)
     return _engine
+
+
+def _aplicar_migracoes(engine: Engine) -> None:
+    """Migrações idempotentes manuais para SQLite (sem alembic)."""
+    with engine.begin() as conn:
+        # 1) anexos.ordem — adicionado quando introduzimos galeria reordenável
+        cols_anexos = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(anexos)")}
+        if "ordem" not in cols_anexos:
+            conn.exec_driver_sql(
+                "ALTER TABLE anexos ADD COLUMN ordem INTEGER NOT NULL DEFAULT 0"
+            )
 
 
 def get_engine() -> Engine:

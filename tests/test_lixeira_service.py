@@ -51,7 +51,7 @@ def test_expurgo_remove_arquivos_de_anexos(session, devolucao, tmp_path,
                                             isolated_data_dir):
     img = tmp_path / "foto.jpg"
     Image.new("RGB", (10, 10)).save(img, "JPEG")
-    anexo = anexo_service.salvar_anexo(session, devolucao.id, img, como_principal=True)
+    anexo = anexo_service.salvar_anexo(session, devolucao.id, img)
     session.flush()
     pasta_devolucao = (isolated_data_dir / "anexos" / f"{devolucao.id:04d}")
     assert pasta_devolucao.exists()
