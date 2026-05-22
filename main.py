@@ -1,9 +1,15 @@
+from pathlib import Path
+
 from nicegui import app, ui
 
 from app.config import Config
 from app.db import init_engine
 from app.services import backup_service, lixeira_service
 from app.db import session_scope
+
+ASSETS_DIR = Path(__file__).parent / "app" / "ui" / "assets"
+app.add_static_files("/assets", str(ASSETS_DIR))
+ui.add_head_html('<link rel="stylesheet" href="/assets/app.css">')
 
 
 def _boot():
