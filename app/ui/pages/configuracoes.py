@@ -12,17 +12,28 @@ def render():
 
     cfg = Config.load()
 
-    with ui.column().classes("w-full max-w-3xl gap-4"):
-        ui.label("Dados").classes("text-h6")
-        ui.label(f"Pasta de dados: {cfg.data_dir}").classes("text-caption")
-        ui.label(f"Banco: {cfg.db_path}").classes("text-caption")
-        ui.label(f"Anexos: {cfg.anexos_dir}").classes("text-caption")
+    with ui.column().style("width:100%; max-width:600px; gap:0"):
 
-        ui.separator()
-        ui.label("Backup").classes("text-h6")
+        # ── DADOS ──────────────────────────────────────────────────────────
+        ui.label("DADOS").classes("app-section-label")
 
-        i_pasta = ui.input("Pasta de backup",
-                            value=str(cfg.backup_folder)).classes("w-full")
+        ui.label(f"Pasta de dados: {cfg.data_dir}").style(
+            "color:var(--text-secondary); font-size:12px; font-family:var(--font-mono)"
+        )
+        ui.label(f"Banco: {cfg.db_path}").style(
+            "color:var(--text-secondary); font-size:12px; font-family:var(--font-mono)"
+        )
+        ui.label(f"Anexos: {cfg.anexos_dir}").style(
+            "color:var(--text-secondary); font-size:12px; font-family:var(--font-mono)"
+        )
+
+        ui.element("div").classes("app-divider")
+
+        # ── BACKUP ─────────────────────────────────────────────────────────
+        ui.label("BACKUP").classes("app-section-label")
+
+        i_pasta = ui.input("Pasta de backup", value=str(cfg.backup_folder)) \
+            .props("outlined dense").classes("w-full")
         i_freq = ui.select(
             {"on_close": "Ao fechar o app",
              "daily": "Diariamente (futuro)",
@@ -30,9 +41,10 @@ def render():
              "manual": "Apenas manual"},
             value=cfg.backup_frequency,
             label="Frequência",
-        ).classes("w-full")
+        ).props("outlined dense").classes("w-full")
         i_ret = ui.number("Manter últimos N backups",
-                           value=cfg.backup_retention, min=1).classes("w-full")
+                           value=cfg.backup_retention, min=1) \
+            .props("outlined dense").classes("w-full")
 
         def salvar_cfg():
             cfg.backup_folder = Path(i_pasta.value)
@@ -41,10 +53,13 @@ def render():
             cfg.save()
             ui.notify("Configurações salvas", type="positive")
 
-        ui.button("Salvar", on_click=salvar_cfg).classes("bg-primary text-white")
+        ui.button("Salvar", on_click=salvar_cfg) \
+            .props("unelevated").classes("bg-primary text-white")
 
-        ui.separator()
-        ui.label("Backup manual").classes("text-h6")
+        ui.element("div").classes("app-divider")
+
+        # ── BACKUP MANUAL ──────────────────────────────────────────────────
+        ui.label("BACKUP MANUAL").classes("app-section-label")
 
         def fazer_backup():
             try:
@@ -55,22 +70,41 @@ def render():
                 ui.notify(f"Erro: {e}", type="negative")
 
         ui.button("Fazer backup agora", on_click=fazer_backup) \
-            .classes("bg-primary text-white")
+            .props("unelevated").classes("bg-primary text-white")
 
-        lista_container = ui.column().classes("w-full")
+        ui.label("Últimos backups").classes("app-section-label").style("margin-top:12px")
+
+        lista_container = ui.column().classes("w-full").style("gap:4px")
 
         def recarregar_lista_backups():
             lista_container.clear()
             with lista_container:
-                ui.label("Últimos backups").classes("text-subtitle1")
                 infos = backup_service.listar_backups()
                 if not infos:
-                    ui.label("Nenhum backup ainda.").classes("text-grey-7")
+                    ui.label("Nenhum backup ainda.").style(
+                        "color:var(--text-muted)"
+                    )
                 for info in infos[:10]:
-                    ui.label(
-                        f"• {info.criado_em.strftime('%d/%m/%Y %H:%M')} "
-                        f"· {info.tamanho_bytes / 1024:.1f} KB "
-                        f"· {info.caminho.name}"
-                    ).classes("text-caption")
+                    data_hora = info.criado_em.strftime("%d/%m/%Y %H:%M")
+                    tamanho = f"{info.tamanho_bytes / 1024:.1f} KB"
+                    nome = info.caminho.name
+                    with ui.row().style(
+                        "background:var(--bg-elevated); "
+                        "border:1px solid var(--border-faint); "
+                        "padding:8px 10px; font-size:12px; "
+                        "width:100%; align-items:center; gap:8px"
+                    ):
+                        ui.label(data_hora).style(
+                            "font-family:var(--font-mono); "
+                            "color:var(--text-secondary)"
+                        )
+                        ui.label(tamanho).style(
+                            "color:var(--text-muted)"
+                        )
+                        ui.label(nome).style(
+                            "font-family:var(--font-mono); "
+                            "color:var(--text-secondary); "
+                            "word-break:break-all"
+                        )
 
         recarregar_lista_backups()
