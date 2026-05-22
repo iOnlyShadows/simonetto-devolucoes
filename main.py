@@ -9,7 +9,7 @@ from app.db import session_scope
 
 ASSETS_DIR = Path(__file__).parent / "app" / "ui" / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))
-ui.add_head_html('<link rel="stylesheet" href="/assets/app.css">')
+ui.add_head_html('<link rel="stylesheet" href="/assets/app.css">', shared=True)
 
 
 def _boot():
