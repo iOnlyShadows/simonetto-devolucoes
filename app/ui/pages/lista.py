@@ -2,7 +2,6 @@ from datetime import date
 
 from nicegui import ui
 
-from app.config import Config
 from app.constants import (BANNER_BACKUP_ALERTA_DIAS, DestinoFisico,
                             DESTINO_FISICO_LABELS, StatusProcesso,
                             STATUS_PROCESSO_LABELS)
@@ -105,10 +104,9 @@ def render():
                         aguardando_retorno=True if filtros["aguardando"] else None,
                         busca=filtros["busca"] or None,
                     )
-                    cfg = Config.load()
                     dados = []
                     for d in devs:
-                        thumb = (cfg.data_dir / d.foto_principal_caminho).as_posix() \
+                        thumb = f"/dados/{d.foto_principal_caminho}" \
                             if d.foto_principal_caminho else None
                         dados.append({
                             "id": d.id,

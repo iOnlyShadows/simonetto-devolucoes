@@ -59,7 +59,7 @@ def abrir_detalhe(devolucao_id: int,
         # Foto + badges
         with ui.row().classes("w-full gap-4 items-start"):
             if dados["foto"]:
-                ui.image((cfg.data_dir / dados["foto"]).as_posix()).classes("w-32 h-32 rounded")
+                ui.image(f"/dados/{dados['foto']}").classes("w-32 h-32 rounded")
             with ui.column().classes("gap-2"):
                 ui.label(f"Devolvido em {dados['data_dev'].strftime('%d/%m/%Y')}").classes("text-caption")
                 if dados["referencia"]:

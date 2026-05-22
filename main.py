@@ -7,10 +7,13 @@ from app.db import session_scope
 
 
 def _boot():
-    Config.load()
+    cfg = Config.load()
     init_engine()
     with session_scope() as s:
         lixeira_service.expurgar_antigas(s)
+    # Expoe a pasta de anexos como rota estatica /dados/...
+    # Necessario pra ui.image() conseguir carregar fotos/thumbnails do disco.
+    app.add_static_files("/dados", str(cfg.data_dir))
 
 
 def _at_shutdown():

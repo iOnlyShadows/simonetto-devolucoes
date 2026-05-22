@@ -64,3 +64,15 @@ uv run pytest --cov=app/services --cov=app/repositories
 1. Fechar o app
 2. Extrair o `.zip` desejado sobre `%LOCALAPPDATA%\SimonettoDevolucoes\`
 3. Reabrir o app
+
+## Próximas melhorias (backlog)
+
+- **Front-end pass**: melhorar a interface — layout mais polido, tipografia,
+  espaçamentos, hierarquia visual, transições, possivelmente dark mode.
+  Hoje está funcional mas tem cara de protótipo. Considerar usar componentes
+  Quasar mais elaborados ou adotar um sistema de design coeso.
+- Empacotamento em `.exe` (PyInstaller) para clicar e abrir sem terminal
+- Atalho na área de trabalho apontando para o `.exe`
+- Opções adicionais de frequência de backup (diário, semanal)
+- Exportação CSV das devoluções
+- Acesso pelo celular (rodar como serviço local + ngrok, ou migrar pra hospedagem)
