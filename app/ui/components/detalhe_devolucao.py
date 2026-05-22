@@ -44,6 +44,7 @@ def abrir_detalhe(devolucao_id: int,
             forma=d.forma_ressarcimento,
             observacoes=d.observacoes,
             foto=d.foto_principal_caminho,
+            atualizado_em=d.atualizado_em,
             anexos=[(a.id, a.nome_original, a.caminho_interno, a.tipo) for a in d.anexos],
         )
         historico = [(h.campo, h.valor_anterior, h.valor_novo, h.data, h.observacao)
@@ -59,7 +60,8 @@ def abrir_detalhe(devolucao_id: int,
         # Foto + badges
         with ui.row().classes("w-full gap-4 items-start"):
             if dados["foto"]:
-                ui.image(f"/dados/{dados['foto']}").classes("w-32 h-32 rounded")
+                cache_bust = int(dados["atualizado_em"].timestamp()) if dados.get("atualizado_em") else 0
+                ui.image(f"/dados/{dados['foto']}?t={cache_bust}").classes("w-32 h-32 rounded")
             with ui.column().classes("gap-2"):
                 ui.label(f"Devolvido em {dados['data_dev'].strftime('%d/%m/%Y')}").classes("text-caption")
                 if dados["referencia"]:

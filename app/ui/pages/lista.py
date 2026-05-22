@@ -106,7 +106,9 @@ def render():
                     )
                     dados = []
                     for d in devs:
-                        thumb = f"/dados/{d.foto_principal_caminho}" \
+                        # Cache-buster com atualizado_em pra forçar reload quando troca a foto
+                        cache_bust = int(d.atualizado_em.timestamp()) if d.atualizado_em else 0
+                        thumb = f"/dados/{d.foto_principal_caminho}?t={cache_bust}" \
                             if d.foto_principal_caminho else None
                         dados.append({
                             "id": d.id,
