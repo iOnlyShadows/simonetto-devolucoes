@@ -23,8 +23,14 @@ def criar_backup() -> Path:
     """Cria um .zip com dados.db, anexos/ e config.json. Retorna o caminho."""
     cfg = Config.load()
     destino_dir = _proxima_pasta(cfg)
+    # Windows tem resolucao de relogio grosseira (~15ms) — datetime.now() pode
+    # repetir em loop apertado. Usa contador suffix se o arquivo ja existir.
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     destino = destino_dir / f"{timestamp}_backup.zip"
+    counter = 1
+    while destino.exists():
+        destino = destino_dir / f"{timestamp}_{counter}_backup.zip"
+        counter += 1
 
     with zipfile.ZipFile(destino, "w", zipfile.ZIP_DEFLATED) as zf:
         if cfg.db_path.exists():
