@@ -2,14 +2,17 @@ from datetime import date
 
 from nicegui import ui
 
-from app.constants import (BANNER_BACKUP_ALERTA_DIAS, DestinoFisico,
-                            DESTINO_FISICO_LABELS, StatusProcesso,
-                            STATUS_PROCESSO_LABELS)
+from app.constants import (
+    BANNER_BACKUP_ALERTA_DIAS,
+    DestinoFisico, DESTINO_FISICO_LABELS,
+    StatusProcesso, STATUS_PROCESSO_LABELS,
+)
 from app.db import session_scope
 from app.repositories import devolucoes_repo, marcas_repo
-from app.services import backup_service
-from app.ui.components.badge_status import (badge_destino, badge_forma,
-                                              badge_status_processo)
+from app.services import anexo_service, backup_service
+from app.ui.components.badge_status import (
+    badge_destino, badge_forma, badge_status_processo,
+)
 
 
 def render():
@@ -19,144 +22,158 @@ def render():
 
     montar_layout("Devoluções")
 
-    # Estado dos filtros
-    filtros = {
-        "busca": "",
-        "marca_id": None,
-        "status": None,
-        "destino": None,
-        "aguardando": False,
-    }
+    filtros = {"busca": "", "marca_id": None, "status": None,
+               "destino": None, "aguardando": False}
 
-    container = ui.column().classes("w-full")
+    container = ui.column().classes("w-full").style("max-width: 1100px;")
 
-    def _banner_backup():
+    def render_banner_backup():
         info = backup_service.ultimo_backup()
+        precisa = False
+        msg = ""
         if info is None:
-            with ui.row().classes("bg-yellow-2 q-pa-sm w-full items-center"):
-                ui.label("⚠️ Nenhum backup foi feito ainda.")
+            precisa = True
+            msg = "⚠️ Nenhum backup foi feito ainda."
+        else:
+            dias = (date.today() - info.criado_em.date()).days
+            if dias >= BANNER_BACKUP_ALERTA_DIAS:
+                precisa = True
+                msg = f"⚠️ Último backup há {dias} dias."
+        if precisa:
+            with ui.row().style(
+                "background: rgba(251, 191, 36, .08); "
+                "border: 1px solid rgba(251, 191, 36, .25); "
+                "border-radius: var(--r-md); padding: 8px 12px; "
+                "margin-bottom: 16px; width: 100%; align-items: center;"
+            ):
+                ui.label(msg).style("color: var(--waiting); font-size: 13px; flex: 1;")
                 ui.button("Fazer backup agora",
                           on_click=lambda: (backup_service.criar_backup(),
-                                            ui.notify("Backup criado"))
-                          ).props("size=sm").classes("bg-primary text-white")
-            return
-        dias = (date.today() - info.criado_em.date()).days
-        if dias >= BANNER_BACKUP_ALERTA_DIAS:
-            with ui.row().classes("bg-yellow-2 q-pa-sm w-full items-center"):
-                ui.label(f"⚠️ Último backup há {dias} dias.")
-                ui.button("Fazer backup agora",
-                          on_click=lambda: (backup_service.criar_backup(),
-                                            ui.notify("Backup criado"))
-                          ).props("size=sm").classes("bg-primary text-white")
+                                            ui.notify("Backup criado", type="positive"))) \
+                    .props("size=sm flat").style("color: var(--waiting);")
+
+    def render_filtros():
+        with ui.row().classes("items-center gap-2 w-full") \
+                .style("padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 12px;"):
+            ui.input(placeholder="Buscar...",
+                     on_change=lambda e: filtros.update(busca=e.value) or render_lista()) \
+                .props("outlined dense").style("width: 220px;")
+
+            with session_scope() as s:
+                marcas = [(m.id, m.nome) for m in marcas_repo.listar(s)]
+            opcoes_marca = {None: "Todas marcas"} | {mid: nome for mid, nome in marcas}
+            ui.select(opcoes_marca, value=None,
+                      on_change=lambda e: filtros.update(marca_id=e.value) or render_lista()) \
+                .props("outlined dense").style("width: 160px;")
+
+            opcoes_status = {None: "Status"} | {
+                s.value: STATUS_PROCESSO_LABELS[s][0] for s in StatusProcesso
+            }
+            ui.select(opcoes_status, value=None,
+                      on_change=lambda e: filtros.update(
+                          status=StatusProcesso(e.value) if e.value else None) or render_lista()) \
+                .props("outlined dense").style("width: 180px;")
+
+            opcoes_dest = {None: "Destino"} | {
+                d.value: DESTINO_FISICO_LABELS[d][0] for d in DestinoFisico
+            }
+            ui.select(opcoes_dest, value=None,
+                      on_change=lambda e: filtros.update(
+                          destino=DestinoFisico(e.value) if e.value else None) or render_lista()) \
+                .props("outlined dense").style("width: 160px;")
+
+            ui.checkbox("⏳ aguardando",
+                        on_change=lambda e: filtros.update(aguardando=e.value) or render_lista()) \
+                .style("color: var(--text-secondary);")
+
+            ui.space()
+            ui.button("+ Nova Devolução",
+                      on_click=lambda: abrir_form_devolucao(on_save=recarregar)) \
+                .props("unelevated").classes("bg-primary")
+
+    lista_container = ui.column().classes("w-full gap-0")
+
+    def render_lista():
+        lista_container.clear()
+        with session_scope() as s:
+            devs = devolucoes_repo.listar_ativas(
+                s,
+                marca_id=filtros["marca_id"], status=filtros["status"],
+                destino=filtros["destino"],
+                aguardando_retorno=True if filtros["aguardando"] else None,
+                busca=filtros["busca"] or None,
+            )
+            dados = []
+            for d in devs:
+                primeira_imagem = next(
+                    (a for a in sorted(d.anexos, key=lambda x: (x.ordem, x.criado_em))
+                     if a.tipo == "imagem"),
+                    None
+                )
+                thumb = anexo_service.thumb_url_de(primeira_imagem) if primeira_imagem else None
+                dados.append({
+                    "id": d.id, "marca": d.marca.nome,
+                    "modelo": d.produto_modelo, "ref": d.produto_referencia,
+                    "data": d.data_devolucao.strftime("%d/%m/%Y"),
+                    "cliente": d.cliente_nome, "aguardando": d.cliente_aguardando_retorno,
+                    "status": d.status_processo, "destino": d.destino_fisico,
+                    "forma": d.forma_ressarcimento, "thumb": thumb,
+                })
+
+        with lista_container:
+            if not dados:
+                # empty state
+                with ui.column().classes("items-center w-full") \
+                        .style("padding: 60px 20px; color: var(--text-muted);"):
+                    ui.label("📭").style("font-size: 48px; margin-bottom: 12px;")
+                    if any([filtros["busca"], filtros["marca_id"], filtros["status"],
+                            filtros["destino"], filtros["aguardando"]]):
+                        ui.label("Nenhuma devolução com esses filtros.") \
+                            .style("color: var(--text-secondary);")
+                    else:
+                        ui.label("Você ainda não tem devoluções.") \
+                            .style("color: var(--text-secondary);")
+                        ui.button("+ Nova Devolução",
+                                  on_click=lambda: abrir_form_devolucao(on_save=recarregar)) \
+                            .props("unelevated").classes("bg-primary").style("margin-top: 12px;")
+                return
+
+            for d in dados:
+                with ui.element("div").classes("app-row") \
+                        .on("click", lambda _, i=d["id"]: abrir_detalhe(i, on_save=recarregar)):
+                    # thumb
+                    if d["thumb"]:
+                        ui.image(d["thumb"]).style(
+                            "width: 56px; height: 56px; border-radius: 6px; "
+                            "object-fit: cover; flex-shrink: 0;"
+                        )
+                    else:
+                        ui.html(
+                            '<div style="width:56px; height:56px; border-radius:6px; '
+                            'background: linear-gradient(135deg, #1a1a1a, #2a2a2a); '
+                            'display:flex; align-items:center; justify-content:center; '
+                            'color:#4a4a4a; font-size:24px;">📷</div>'
+                        )
+                    # main
+                    with ui.column().classes("gap-1").style("min-width: 0;"):
+                        ref_part = f" · ref {d['ref']}" if d['ref'] else ""
+                        ui.label(f"{d['marca']} · {d['modelo']}{ref_part}").style(
+                            "color: var(--text-primary); font-size: 14px; font-weight: 500;"
+                        )
+                        meta = f"Devolvido em {d['data']}"
+                        if d['cliente']:
+                            meta += f"   ·   Cliente: {d['cliente']}"
+                            if d['aguardando']:
+                                meta += "  ⏳"
+                        ui.label(meta).style("color: var(--text-secondary); font-size: 12px;")
+                    badge_status_processo(d["status"])
+                    badge_destino(d["destino"])
+                    badge_forma(d["forma"])
 
     def recarregar():
-        container.clear()
-        with container:
-            _banner_backup()
+        render_lista()
 
-            # Barra de filtros
-            with ui.row().classes("w-full items-end gap-2"):
-                ui.input("Buscar...", on_change=lambda e: filtros.update(busca=e.value) or recarregar_lista()) \
-                    .classes("w-64")
-
-                with session_scope() as s:
-                    marcas = [(m.id, m.nome) for m in marcas_repo.listar(s)]
-                opcoes_marca = {None: "Todas marcas"} | {mid: nome for mid, nome in marcas}
-                ui.select(opcoes_marca, label="Marca",
-                          on_change=lambda e: filtros.update(marca_id=e.value) or recarregar_lista()) \
-                    .classes("w-48").value = None
-
-                opcoes_status = {None: "Todos status"} | {
-                    s.value: STATUS_PROCESSO_LABELS[s][0] for s in StatusProcesso
-                }
-                ui.select(opcoes_status, label="Status",
-                          on_change=lambda e: filtros.update(
-                              status=StatusProcesso(e.value) if e.value else None) or recarregar_lista()) \
-                    .classes("w-56").value = None
-
-                opcoes_dest = {None: "Todos destinos"} | {
-                    d.value: DESTINO_FISICO_LABELS[d][0] for d in DestinoFisico
-                }
-                ui.select(opcoes_dest, label="Destino",
-                          on_change=lambda e: filtros.update(
-                              destino=DestinoFisico(e.value) if e.value else None) or recarregar_lista()) \
-                    .classes("w-48").value = None
-
-                ui.checkbox("Aguardando retorno",
-                            on_change=lambda e: filtros.update(aguardando=e.value) or recarregar_lista())
-
-                ui.space()
-                ui.button("+ Nova Devolução",
-                          on_click=lambda: abrir_form_devolucao(on_save=recarregar)) \
-                    .classes("bg-primary text-white")
-
-            # Lista
-            lista_container = ui.column().classes("w-full gap-2")
-
-            def recarregar_lista():
-                lista_container.clear()
-                with session_scope() as s:
-                    devs = devolucoes_repo.listar_ativas(
-                        s,
-                        marca_id=filtros["marca_id"],
-                        status=filtros["status"],
-                        destino=filtros["destino"],
-                        aguardando_retorno=True if filtros["aguardando"] else None,
-                        busca=filtros["busca"] or None,
-                    )
-                    from app.services import anexo_service
-                    dados = []
-                    for d in devs:
-                        # Pega a primeira imagem (menor ordem) como thumbnail
-                        primeira_imagem = next(
-                            (a for a in sorted(d.anexos, key=lambda x: (x.ordem, x.criado_em))
-                             if a.tipo == "imagem"),
-                            None
-                        )
-                        thumb = anexo_service.thumb_url_de(primeira_imagem) if primeira_imagem else None
-                        dados.append({
-                            "id": d.id,
-                            "marca": d.marca.nome,
-                            "modelo": d.produto_modelo,
-                            "ref": d.produto_referencia,
-                            "data": d.data_devolucao.strftime("%d/%m/%Y"),
-                            "cliente": d.cliente_nome,
-                            "aguardando": d.cliente_aguardando_retorno,
-                            "status": d.status_processo,
-                            "destino": d.destino_fisico,
-                            "forma": d.forma_ressarcimento,
-                            "thumb": thumb,
-                        })
-
-                with lista_container:
-                    if not dados:
-                        ui.label("Nenhuma devolução com esses filtros.").classes("text-grey-7 q-pa-md")
-                        return
-                    for d in dados:
-                        with ui.card().classes("w-full cursor-pointer hover:bg-grey-1") \
-                                .on("click", lambda _, i=d["id"]: abrir_detalhe(i, on_save=recarregar)):
-                            with ui.row().classes("items-center w-full gap-4"):
-                                if d["thumb"]:
-                                    ui.image(d["thumb"]).classes("w-16 h-16 rounded")
-                                else:
-                                    ui.icon("image", size="lg").classes("text-grey-5")
-                                with ui.column().classes("flex-grow gap-1"):
-                                    ui.label(f"{d['marca']} · {d['modelo']}" +
-                                             (f" · ref {d['ref']}" if d['ref'] else "")) \
-                                        .classes("font-bold")
-                                    cliente_str = ""
-                                    if d["cliente"]:
-                                        cliente_str = f"Cliente: {d['cliente']}"
-                                        if d["aguardando"]:
-                                            cliente_str += " ⏳"
-                                    ui.label(f"Devolvido: {d['data']}" +
-                                             (f"   {cliente_str}" if cliente_str else "")) \
-                                        .classes("text-caption text-grey-7")
-                                    with ui.row().classes("gap-2 items-center"):
-                                        badge_status_processo(d["status"])
-                                        badge_destino(d["destino"])
-                                        badge_forma(d["forma"])
-
-            recarregar_lista()
-
-    recarregar()
+    with container:
+        render_banner_backup()
+        render_filtros()
+    render_lista()
