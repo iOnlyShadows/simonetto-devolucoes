@@ -48,4 +48,4 @@ _boot()
 app.on_shutdown(_at_shutdown)
 
 ui.run(title="Simonetto Devoluções", native=True, window_size=(1280, 800),
-       reload=False, show=False, prefer_local=True)
+       reload=False, show=False)
