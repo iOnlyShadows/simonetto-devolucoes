@@ -69,13 +69,13 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
                              format="%.2f").classes("w-full")
         i_defeito = ui.input("Defeito", value=valores["defeito_descricao"]).classes("w-full")
 
-        def _on_upload_foto(e: events.UploadEventArguments):
+        async def _on_upload_foto(e: events.UploadEventArguments):
             # Escreve bytes do upload num temp file preservando o nome original.
             from tempfile import mkdtemp
-            nome = e.file.filename or "upload.bin"
+            nome = e.file.name or "upload.bin"
             tmp_dir = Path(mkdtemp())
             tmp = tmp_dir / nome
-            tmp.write_bytes(e.file.file.read())
+            await e.file.save(tmp)
             foto_principal_temp["path"] = tmp
             ui.notify(f"Foto principal selecionada: {nome}")
 

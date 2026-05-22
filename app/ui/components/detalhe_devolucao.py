@@ -93,12 +93,12 @@ def abrir_detalhe(devolucao_id: int,
         ui.separator()
         ui.label("Anexos").classes("text-subtitle2")
 
-        def _on_upload_extra(e):
+        async def _on_upload_extra(e):
             from pathlib import Path
             from tempfile import mkdtemp
-            nome = e.file.filename or "upload.bin"
+            nome = e.file.name or "upload.bin"
             tmp = Path(mkdtemp()) / nome  # preserva nome original
-            tmp.write_bytes(e.file.file.read())
+            await e.file.save(tmp)
             try:
                 with session_scope() as s:
                     anexo_service.salvar_anexo(s, devolucao_id, tmp,
