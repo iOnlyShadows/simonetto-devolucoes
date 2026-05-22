@@ -96,8 +96,9 @@ def abrir_detalhe(devolucao_id: int,
         def _on_upload_extra(e):
             from pathlib import Path
             from tempfile import mkdtemp
-            tmp = Path(mkdtemp()) / e.name  # preserva nome original
-            tmp.write_bytes(e.content.read())
+            nome = e.file.filename or "upload.bin"
+            tmp = Path(mkdtemp()) / nome  # preserva nome original
+            tmp.write_bytes(e.file.file.read())
             try:
                 with session_scope() as s:
                     anexo_service.salvar_anexo(s, devolucao_id, tmp,

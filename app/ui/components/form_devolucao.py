@@ -72,11 +72,12 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
         def _on_upload_foto(e: events.UploadEventArguments):
             # Escreve bytes do upload num temp file preservando o nome original.
             from tempfile import mkdtemp
+            nome = e.file.filename or "upload.bin"
             tmp_dir = Path(mkdtemp())
-            tmp = tmp_dir / e.name
-            tmp.write_bytes(e.content.read())
+            tmp = tmp_dir / nome
+            tmp.write_bytes(e.file.file.read())
             foto_principal_temp["path"] = tmp
-            ui.notify(f"Foto principal selecionada: {e.name}")
+            ui.notify(f"Foto principal selecionada: {nome}")
 
         ui.upload(label="Foto principal", on_upload=_on_upload_foto, auto_upload=True,
                   max_files=1).props('accept=".jpg,.jpeg,.png,.webp"').classes("w-full")
