@@ -9,3 +9,4 @@ build/
 *.egg-info/
 .dev_data/
 .obsidian/
+.superpowers/
