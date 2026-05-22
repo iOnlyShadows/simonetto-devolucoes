@@ -104,6 +104,9 @@ def abrir_detalhe(devolucao_id: int,
             .classes("text-caption text-grey-7")
 
         def _recarregar():
+            # Tambem atualiza a lista atras pra refletir mudancas de thumbnail/ordem
+            if on_save:
+                on_save()
             dlg.close()
             abrir_detalhe(devolucao_id, on_save=on_save)
 
