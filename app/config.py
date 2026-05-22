@@ -19,6 +19,7 @@ class Config:
     backup_folder: Path
     backup_retention: int = 30
     backup_frequency: str = "on_close"  # on_close | daily | weekly | manual
+    sidebar_collapsed: bool = False
 
     @property
     def db_path(self) -> Path:
@@ -48,6 +49,7 @@ class Config:
             "backup_folder": str(data_dir / "backups"),
             "backup_retention": 30,
             "backup_frequency": "on_close",
+            "sidebar_collapsed": False,
         }
         if config_file.exists():
             defaults.update(json.loads(config_file.read_text(encoding="utf-8")))
@@ -57,6 +59,7 @@ class Config:
             backup_folder=Path(defaults["backup_folder"]),
             backup_retention=defaults["backup_retention"],
             backup_frequency=defaults["backup_frequency"],
+            sidebar_collapsed=defaults["sidebar_collapsed"],
         )
 
     def save(self) -> None:
@@ -64,5 +67,6 @@ class Config:
             "backup_folder": str(self.backup_folder),
             "backup_retention": self.backup_retention,
             "backup_frequency": self.backup_frequency,
+            "sidebar_collapsed": self.sidebar_collapsed,
         }
         self.config_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")

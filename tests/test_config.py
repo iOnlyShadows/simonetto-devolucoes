@@ -31,3 +31,13 @@ def test_config_persists_preferences(tmp_path, monkeypatch):
     reloaded = Config.load()
     assert reloaded.backup_folder == tmp_path / "custom_backups"
     assert reloaded.backup_retention == 50
+
+
+def test_config_persists_sidebar_state(tmp_path, monkeypatch):
+    monkeypatch.setenv("SIMONETTO_DATA_DIR", str(tmp_path))
+    cfg = Config.load()
+    assert cfg.sidebar_collapsed is False  # default
+    cfg.sidebar_collapsed = True
+    cfg.save()
+    reloaded = Config.load()
+    assert reloaded.sidebar_collapsed is True
