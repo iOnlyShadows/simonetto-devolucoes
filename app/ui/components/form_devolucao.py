@@ -65,8 +65,8 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
                 .props("flat round dense").style("color: var(--text-secondary);")
 
         # Body
-        with ui.column().classes("w-full") \
-                .style("flex: 1; overflow-y: auto; padding: 20px; gap: 0;"):
+        with ui.column().classes("w-full form-body") \
+                .style("flex: 1; overflow-y: auto; padding: 20px; gap: 12px;"):
 
             opcoes_marca = {mid: nome for mid, nome, _ in marcas}
             sel_marca = ui.select(opcoes_marca, label="Marca *").classes("w-full") \
@@ -92,19 +92,25 @@ def abrir_form_devolucao(devolucao_id: Optional[int] = None,
             i_defeito = ui.input("Defeito", value=valores["defeito_descricao"]) \
                 .props("outlined dense").classes("w-full")
 
+            ui.label("Imagens (opcional) — a primeira será a principal") \
+                .style("color: var(--text-muted); font-size: 11px; margin-top: 6px;")
+
             async def on_upload_imagem(e: events.UploadEventArguments):
                 from tempfile import mkdtemp
                 nome = e.file.name or "imagem.jpg"
                 tmp = Path(mkdtemp()) / nome
                 await e.file.save(tmp)
                 imagens_temp.append(tmp)
-                ui.notify(f"Imagem adicionada: {nome}")
+                with lista_imgs:
+                    ui.label(f"📎 {nome}").style(
+                        "color: var(--text-secondary); font-size: 12px;")
 
-            ui.label("Imagens (opcional) — a primeira será a principal") \
-                .style("color: var(--text-muted); font-size: 11px; margin-top: 6px;")
             ui.upload(label="+ Imagens", on_upload=on_upload_imagem,
                       auto_upload=True, multiple=True) \
-                .props('accept=".jpg,.jpeg,.png,.webp" flat').classes("w-full app-upload-zone")
+                .props('accept=".jpg,.jpeg,.png,.webp" flat') \
+                .classes("w-full app-upload-zone no-file-list")
+            # Lista simples só com o nome do arquivo anexado (sem preview)
+            lista_imgs = ui.column().classes("w-full gap-1").style("margin-top: 4px;")
 
             ui.html('<div class="app-divider"></div>')
             ui.label("DATAS").classes("app-section-label").style("margin-bottom: 8px;")
