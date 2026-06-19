@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark; /* widgets nativos (date picker, etc.) no tema escuro */
   /* superfícies */
   --bg-base: #0a0a0a;
   --bg-elevated: #0d0d0d;
@@ -91,13 +92,31 @@ html, body, .q-page, .q-page-container, .nicegui-content {
 .app-sidebar-link.active { background: var(--bg-active); color: var(--text-primary); }
 .app-sidebar-icon-only { width: 36px; height: 36px; justify-content: center; padding: 0; }
 
-/* upload zones */
+/* upload zones — dropzone harmonizado, área toda clicável */
 .app-upload-zone {
-  border: 1px dashed var(--border-subtle); border-radius: var(--r-md);
-  padding: 14px; text-align: center; color: var(--text-secondary);
-  font-size: 12px; cursor: pointer; transition: border-color .15s, color .15s;
+  border: 1px dashed var(--border-subtle) !important; border-radius: var(--r-md) !important;
+  color: var(--text-secondary); font-size: 12px; cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  background: transparent !important; box-shadow: none !important;
+  position: relative; min-height: 56px !important; max-height: none !important;
 }
-.app-upload-zone:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+.app-upload-zone:hover { border-color: var(--text-secondary); background: var(--bg-hover) !important; }
+.app-upload-zone .q-uploader__header {
+  background: transparent !important; color: var(--text-secondary) !important;
+  border-radius: var(--r-md);
+}
+.app-upload-zone .q-uploader__header-content {
+  padding: 10px 12px !important; justify-content: center !important; gap: 8px;
+}
+.app-upload-zone .q-uploader__title {
+  color: var(--text-secondary) !important; font-size: 12px !important;
+  font-weight: 500 !important; line-height: 1.3 !important;
+}
+.app-upload-zone .q-uploader__subtitle { display: none !important; } /* esconde "0.0B / 0.00%" */
+.app-upload-zone .q-uploader__list { background: transparent !important; }
+.app-upload-zone .q-uploader__list:empty { display: none !important; }
+.app-upload-zone .q-btn,
+.app-upload-zone .q-btn .q-icon { color: var(--text-secondary) !important; }
 
 /* timeline */
 .app-timeline { position: relative; padding-left: 16px; }
@@ -112,3 +131,64 @@ html, body, .q-page, .q-page-container, .nicegui-content {
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* ===== overlays / popups (q-menu de selects e ui.menu) ===== */
+.q-menu {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .55) !important;
+}
+.q-menu .q-item,
+.q-menu .q-item__label {
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
+}
+.q-menu .q-item {
+  min-height: 38px !important;
+  transition: background .12s;
+}
+.q-menu .q-item__section--side,
+.q-menu .q-item__section--side .q-icon { color: var(--text-secondary) !important; }
+/* hover / item focado / item selecionado */
+.q-menu .q-item:hover,
+.q-menu .q-item.q-manual-focusable--focused,
+.q-menu .q-item--active,
+.q-menu .q-item[aria-selected="true"] {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+/* mata o overlay branco do "focus helper" do Quasar */
+.q-menu .q-focus-helper { background: transparent !important; opacity: 0 !important; }
+.q-menu .q-item--active { color: var(--accent) !important; }
+
+/* seta dropdown e ícones do campo select */
+.q-select .q-select__dropdown-icon,
+.q-field__append .q-icon,
+.q-field__prepend .q-icon { color: var(--text-secondary) !important; }
+
+/* ===== checkbox ===== */
+.q-checkbox__bg { border-color: var(--text-muted) !important; }
+.q-checkbox__inner--truthy .q-checkbox__bg {
+  background: var(--accent) !important; border-color: var(--accent) !important;
+}
+.q-checkbox__svg { color: var(--accent-fg) !important; }
+.q-checkbox__label { color: var(--text-secondary) !important; }
+
+/* ===== input: hover/focus harmonizados ===== */
+.q-field--outlined .q-field__control:hover:before { border-color: var(--text-muted) !important; }
+.q-field--outlined.q-field--focused .q-field__control:after { border-color: var(--accent) !important; }
+.q-field__marginal { color: var(--text-secondary) !important; }
+.q-placeholder, input::placeholder, textarea::placeholder { color: var(--text-muted) !important; }
+
+/* ===== upload: input cobre a zona toda (fallback p/ a delegação JS) ===== */
+.app-upload-zone .q-uploader__input { cursor: pointer !important; }
+/* uploader sem lista/preview de arquivo (mostramos só o nome à parte) */
+.app-upload-zone.no-file-list .q-uploader__list { display: none !important; }
+
+/* ===== form: dividers discretos (o gap da coluna já separa os campos) ===== */
+.form-body .app-divider { margin: 4px 0 !important; }
+
+/* ===== notificações no tema escuro ===== */
+.q-notification { border-radius: var(--r-md) !important; }

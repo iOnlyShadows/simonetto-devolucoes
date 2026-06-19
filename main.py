@@ -11,6 +11,24 @@ ASSETS_DIR = Path(__file__).parent / "app" / "ui" / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))
 ui.add_head_html('<link rel="stylesheet" href="/assets/app.css">', shared=True)
 
+# Delegação global: clicar em qualquer lugar de uma .app-upload-zone abre o
+# seletor de arquivo (não só no botão "+"). Quasar coloca o <input type=file>
+# escondido dentro do botão; aqui encaminhamos o clique da div inteira pra ele.
+ui.add_head_html('''<script>
+(function () {
+  if (window.__simUploadDelegate) return;
+  window.__simUploadDelegate = true;
+  document.addEventListener('click', function (e) {
+    var zone = e.target.closest('.app-upload-zone');
+    if (!zone) return;
+    if (e.target.closest('button')) return;            // botões agem normalmente
+    if (e.target.matches('input[type=file]')) return;  // evita clique duplo
+    var input = zone.querySelector('input[type=file]');
+    if (input) input.click();
+  }, true);
+})();
+</script>''', shared=True)
+
 
 def _boot():
     cfg = Config.load()
