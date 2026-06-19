@@ -1174,7 +1174,7 @@ git commit -m "feat(repos): anexos_repo + historico_repo"
 
 A regra principal: ao mudar `status_processo` ou `destino_fisico`, registrar no histórico.
 
-- [ ] **Step 1: Escrever testes**
+- [x] **Step 1: Escrever testes**
 
 ```python
 # tests/test_devolucao_service.py
@@ -1285,14 +1285,14 @@ def test_atualizar_via_geral_tambem_registra_historico_de_status(session, marca)
     assert ("destino_fisico", "recolhido") in novos
 ```
 
-- [ ] **Step 2: Rodar — ver falhar**
+- [x] **Step 2: Rodar — ver falhar**
 
 ```bash
 uv run pytest tests/test_devolucao_service.py -v
 ```
 Expected: FAIL
 
-- [ ] **Step 3: Implementar `app/services/devolucao_service.py`**
+- [x] **Step 3: Implementar `app/services/devolucao_service.py`**
 
 ```python
 from typing import Optional
@@ -1381,14 +1381,14 @@ def atualizar(session: Session, devolucao_id: int, **campos) -> Optional[Devoluc
     return d
 ```
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 ```bash
 uv run pytest tests/test_devolucao_service.py -v
 ```
 Expected: 6 passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/services/devolucao_service.py tests/test_devolucao_service.py
@@ -2032,7 +2032,7 @@ git commit -m "feat(ui): layout principal + menu lateral + main.py com boot e sh
 
 Implementação curta, sem teste automatizado (UI).
 
-- [ ] **Step 1: Criar `app/ui/pages/marcas.py`**
+- [x] **Step 1: Criar `app/ui/pages/marcas.py`**
 
 ```python
 from nicegui import ui
@@ -2152,14 +2152,14 @@ def render():
     recarregar()
 ```
 
-- [ ] **Step 2: Smoke test manual (opcional, mas faz)**
+- [x] **Step 2: Smoke test manual (opcional, mas faz)**
 
 ```bash
 uv run python main.py
 ```
 Esperado: janela abre, clica em "Marcas", consegue criar uma marca, editar, excluir.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/ui/pages/marcas.py
