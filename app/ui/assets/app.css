@@ -65,21 +65,49 @@ html, body, .q-page, .q-page-container, .nicegui-content {
 .app-pill {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11px; padding: 3px 9px; border-radius: 20px;
-  border: 1px solid; font-weight: 500; line-height: 1;
+  border: 1px solid; font-weight: 500; line-height: 1; white-space: nowrap;
 }
 .app-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
 .app-pill.clickable { cursor: pointer; transition: filter .15s; }
 .app-pill.clickable:hover { filter: brightness(1.3); }
 .app-pill.clickable::after { content: '▾'; font-size: 9px; opacity: .6; margin-left: 2px; }
 
-/* row de devolução */
+/* lista de devoluções — grid único compartilhado para alinhar colunas.
+   Conteúdo do tamanho do conteúdo (com teto) + pílulas logo em seguida;
+   a coluna espaçadora 1fr no fim empurra o vazio pra direita. */
+.app-rows-grid {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 26rem) auto auto auto 1fr;
+  column-gap: 16px;
+}
+/* cada linha herda as colunas do grid pai (subgrid) -> pílulas alinhadas */
 .app-row {
-  display: grid; grid-template-columns: 56px 1fr auto auto auto;
-  gap: 16px; padding: 14px 8px; border-bottom: 1px solid var(--border-faint);
-  align-items: center; cursor: pointer; transition: background .15s;
+  display: grid; grid-template-columns: subgrid; grid-column: 1 / -1;
+  align-items: center; padding: 14px 8px;
+  border-bottom: 1px solid var(--border-faint);
+  cursor: pointer; transition: background .15s;
 }
 .app-row:hover { background: #0f0f0f; }
 .app-row:last-child { border-bottom: none; }
+
+/* cabeçalho de colunas da lista */
+.app-row-head { cursor: default; padding: 0 8px 8px; border-bottom: 1px solid var(--border-subtle); }
+.app-row-head:hover { background: transparent; }
+.app-col-head {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); font-weight: 600;
+}
+
+/* resumo / estatísticas no topo */
+.app-resumo { gap: 0 !important; margin-bottom: 18px; }
+.app-stat { gap: 1px !important; padding: 2px 22px; justify-content: center; }
+.app-stat:first-child { padding-left: 0; }
+.app-stat:not(:first-child) { border-left: 1px solid var(--border-subtle); }
+.app-stat-value { font-size: 20px; font-weight: 700; line-height: 1.15; }
+.app-stat-label {
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .6px;
+}
 
 /* sidebar */
 .app-sidebar-link {

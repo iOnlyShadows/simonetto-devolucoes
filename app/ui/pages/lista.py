@@ -15,6 +15,12 @@ from app.ui.components.badge_status import (
 )
 
 
+def _brl(v: float) -> str:
+    """Formata um valor como moeda BR (R$ 1.234,56)."""
+    s = f"{v:,.2f}"  # ex.: 1,234.56 (formato US)
+    return "R$ " + s.replace(",", "_").replace(".", ",").replace("_", ".")
+
+
 def render():
     from app.ui.layout import montar_layout
     from app.ui.components.form_devolucao import abrir_form_devolucao
@@ -91,6 +97,21 @@ def render():
                       on_click=lambda: abrir_form_devolucao(on_save=recarregar)) \
                 .props("unelevated").classes("bg-primary")
 
+    def render_resumo(dados):
+        resumo_container.clear()
+        abertas = [x for x in dados if x["status"] != StatusProcesso.RESSARCIDO]
+        a_ressarcir = sum(x["valor"] for x in abertas if x["valor"])
+        stats = [
+            (str(len(dados)), "devoluções", "var(--text-primary)"),
+            (str(len(abertas)), "pendentes", "var(--status-orange)"),
+            (_brl(a_ressarcir), "a ressarcir", "var(--status-yellow)"),
+        ]
+        with resumo_container:
+            for valor, label, cor in stats:
+                with ui.column().classes("app-stat"):
+                    ui.label(valor).classes("app-stat-value").style(f"color: {cor};")
+                    ui.label(label).classes("app-stat-label")
+
     lista_container = ui.column().classes("w-full gap-0")
 
     def render_lista():
@@ -118,7 +139,10 @@ def render():
                     "cliente": d.cliente_nome, "aguardando": d.cliente_aguardando_retorno,
                     "status": d.status_processo, "destino": d.destino_fisico,
                     "forma": d.forma_ressarcimento, "thumb": thumb,
+                    "valor": float(d.valor_custo) if d.valor_custo else None,
                 })
+
+        render_resumo(dados)
 
         with lista_container:
             if not dados:
@@ -138,42 +162,51 @@ def render():
                             .props("unelevated").classes("bg-primary").style("margin-top: 12px;")
                 return
 
-            for d in dados:
-                with ui.element("div").classes("app-row") \
-                        .on("click", lambda _, i=d["id"]: abrir_detalhe(i, on_save=recarregar)):
-                    # thumb
-                    if d["thumb"]:
-                        ui.image(d["thumb"]).style(
-                            "width: 56px; height: 56px; border-radius: 6px; "
-                            "object-fit: cover; flex-shrink: 0;"
-                        )
-                    else:
-                        ui.html(
-                            '<div style="width:56px; height:56px; border-radius:6px; '
-                            'background: linear-gradient(135deg, #1a1a1a, #2a2a2a); '
-                            'display:flex; align-items:center; justify-content:center; '
-                            'color:#4a4a4a; font-size:24px;">📷</div>'
-                        )
-                    # main
-                    with ui.column().classes("gap-1").style("min-width: 0;"):
-                        ref_part = f" · ref {d['ref']}" if d['ref'] else ""
-                        ui.label(f"{d['marca']} · {d['modelo']}{ref_part}").style(
-                            "color: var(--text-primary); font-size: 14px; font-weight: 500;"
-                        )
-                        meta = f"Devolvido em {d['data']}"
-                        if d['cliente']:
-                            meta += f"   ·   Cliente: {d['cliente']}"
-                            if d['aguardando']:
-                                meta += "  ⏳"
-                        ui.label(meta).style("color: var(--text-secondary); font-size: 12px;")
-                    badge_status_processo(d["status"])
-                    badge_destino(d["destino"])
-                    badge_forma(d["forma"])
+            with ui.element("div").classes("app-rows-grid w-full"):
+                # cabeçalho de colunas
+                with ui.element("div").classes("app-row app-row-head"):
+                    ui.element("div")  # espaço do thumbnail
+                    ui.label("Produto").classes("app-col-head")
+                    ui.label("Status").classes("app-col-head")
+                    ui.label("Destino").classes("app-col-head")
+                    ui.label("Forma").classes("app-col-head")
+                for d in dados:
+                    with ui.element("div").classes("app-row") \
+                            .on("click", lambda _, i=d["id"]: abrir_detalhe(i, on_save=recarregar)):
+                        # thumb
+                        if d["thumb"]:
+                            ui.image(d["thumb"]).style(
+                                "width: 56px; height: 56px; border-radius: 6px; "
+                                "object-fit: cover; flex-shrink: 0;"
+                            )
+                        else:
+                            ui.html(
+                                '<div style="width:56px; height:56px; border-radius:6px; '
+                                'background: linear-gradient(135deg, #1a1a1a, #2a2a2a); '
+                                'display:flex; align-items:center; justify-content:center; '
+                                'color:#4a4a4a; font-size:24px;">📷</div>'
+                            )
+                        # main
+                        with ui.column().classes("gap-1").style("min-width: 0;"):
+                            ref_part = f" · ref {d['ref']}" if d['ref'] else ""
+                            ui.label(f"{d['marca']} · {d['modelo']}{ref_part}").style(
+                                "color: var(--text-primary); font-size: 14px; font-weight: 500;"
+                            )
+                            meta = f"Devolvido em {d['data']}"
+                            if d['cliente']:
+                                meta += f"   ·   Cliente: {d['cliente']}"
+                                if d['aguardando']:
+                                    meta += "  ⏳"
+                            ui.label(meta).style("color: var(--text-secondary); font-size: 12px;")
+                        badge_status_processo(d["status"])
+                        badge_destino(d["destino"])
+                        badge_forma(d["forma"])
 
     def recarregar():
         render_lista()
 
     with container:
         render_banner_backup()
+        resumo_container = ui.row().classes("items-center app-resumo")
         render_filtros()
     render_lista()
