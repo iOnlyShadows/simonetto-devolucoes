@@ -36,6 +36,59 @@ SIMONETTO_DATA_DIR=./.dev_data uv run python scripts/seed_demo.py
 SIMONETTO_DATA_DIR=./.dev_data uv run python main.py
 ```
 
+## Deploy em rede local (2 PCs)
+
+Modelo: **um** PC é o **principal** — roda o servidor e guarda o banco. O **2º PC
+não instala nada**, só abre o endereço no navegador. Os dados ficam só no principal.
+
+### 1. Gerar o executável (no PC de desenvolvimento)
+
+```powershell
+.\build-exe.ps1
+```
+
+Gera `dist\Simonetto-Servidor.exe` (servidor de rede, não precisa de Python/uv no
+PC da loja). Copie esse `.exe` para o **PC principal**.
+
+### 2. No PC principal
+
+1. Liberar a porta no firewall (uma vez, como **Administrador**):
+   ```powershell
+   .\liberar-firewall.ps1
+   ```
+2. Rodar o `Simonetto-Servidor.exe` (duplo clique). Abre um console mostrando o
+   endereço de acesso, ex.: `http://192.168.0.10:8080`. Deixe aberto durante o uso.
+3. (Opcional) iniciar sozinho ao ligar o PC:
+   ```powershell
+   .\instalar-autostart.ps1 -ExePath "C:\caminho\Simonetto-Servidor.exe"
+   ```
+
+### 3. No 2º PC
+
+Criar um atalho em modo "app" (janela limpa, cara de programa nativo):
+
+```powershell
+.\criar-atalho-cliente.ps1 -Endereco "http://192.168.0.10:8080"
+```
+
+Ou simplesmente abrir esse endereço no navegador.
+
+### Alternativa: rodar do código (sem gerar `.exe`)
+
+No PC principal, com `uv` instalado: `.\iniciar-servidor.ps1` (mostra o endereço e
+deixa um terminal aberto).
+
+### Detalhes
+
+- O banco (SQLite) roda em modo **WAL** + `busy_timeout`, suportando os 2 acessos
+  simultâneos com segurança.
+- Pela rede, só a pasta de **anexos** é exposta via HTTP — o banco e os backups
+  **não** ficam acessíveis.
+- Requisitos: os 2 PCs na mesma rede e a rede marcada como **Privada** no Windows.
+- Variáveis de ambiente: `SIMONETTO_SERVER=1` (liga o modo servidor; o `.exe` já
+  vem nesse modo), `SIMONETTO_PORT` (padrão `8080`), `SIMONETTO_DATA_DIR` (pasta
+  de dados).
+
 ## Testes
 
 ```bash
