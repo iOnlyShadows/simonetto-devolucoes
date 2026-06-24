@@ -23,7 +23,19 @@ uv run pyinstaller --noconfirm --clean --onefile --windowed `
     --collect-all webview `
     client.py
 
+Write-Host "Montando o instalador do cliente (.zip)..." -ForegroundColor Cyan
+$stage = Join-Path $env:TEMP "sim_instalador"
+if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+New-Item -ItemType Directory -Path $stage | Out-Null
+Copy-Item "dist\Simonetto-Cliente.exe" "$stage\Simonetto-Cliente.exe"
+Copy-Item "instalar-cliente.bat" "$stage\Instalar.bat"
+$zip = "dist\Simonetto-Cliente-Instalador.zip"
+if (Test-Path $zip) { Remove-Item -Force $zip }
+Compress-Archive -Path "$stage\*" -DestinationPath $zip
+Remove-Item -Recurse -Force $stage
+
 Write-Host ""
 Write-Host "Pronto! Em dist\:" -ForegroundColor Green
-Write-Host "  Simonetto-Servidor.exe  -> copie para o PC principal"
-Write-Host "  Simonetto-Cliente.exe   -> copie para os 2 PCs"
+Write-Host "  Simonetto-Servidor.exe              -> PC principal"
+Write-Host "  Simonetto-Cliente.exe               -> PC principal (janela)"
+Write-Host "  Simonetto-Cliente-Instalador.zip    -> envie para o 2o PC"

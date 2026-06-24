@@ -74,13 +74,15 @@ Copie os **dois** `.exe` para uma pasta fixa (ex.: `C:\Simonetto\`).
    .\criar-atalho-cliente.ps1 -Endereco "http://localhost:8080"
    ```
 
-### 3. No 2º PC
+### 3. No 2º PC (instalador "clique e pronto")
 
-Copie o **`Simonetto-Cliente.exe`** e crie o atalho apontando pro IP do principal:
+Envie o **`dist\Simonetto-Cliente-Instalador.zip`** para o 2º PC (WhatsApp, e‑mail,
+pendrive). Lá: extrair o `.zip` e dar **duplo clique em `Instalar.bat`**. Ele copia o
+programa e cria o ícone na área de trabalho (pergunta o endereço do servidor, com
+`http://192.168.1.12:8080` como padrão — é só apertar ENTER).
 
-```powershell
-.\criar-atalho-cliente.ps1 -Endereco "http://192.168.1.12:8080"
-```
+> Alternativa manual: copiar o `Simonetto-Cliente.exe` e rodar
+> `.\criar-atalho-cliente.ps1 -Endereco "http://192.168.1.12:8080"` no PowerShell.
 
 Dia a dia: **clicar no ícone "Simonetto Devoluções"** → abre a janela nativa. ✅
 
