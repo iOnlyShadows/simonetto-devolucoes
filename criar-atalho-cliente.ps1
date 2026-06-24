@@ -1,27 +1,27 @@
-# Cria, na Area de Trabalho, um atalho que abre o app em modo "app"
-# (janela limpa, sem barra de navegador — cara de programa nativo).
-# Rode no 2o PC (cliente).
-# Uso:  .\criar-atalho-cliente.ps1 -Endereco "http://192.168.0.10:8080"
+# Cria, na Area de Trabalho, um atalho que abre o Simonetto-Cliente.exe
+# (janela NATIVA, sem navegador) ja apontando para o servidor.
+# Rode no PC onde quer o icone (principal e/ou 2o PC).
+# Uso:
+#   .\criar-atalho-cliente.ps1 -Endereco "http://192.168.1.12:8080"
+#   (no proprio PC principal pode usar -Endereco "http://localhost:8080")
 
-param([string]$Endereco)
+param([string]$Endereco, [string]$ExePath)
 
 $ErrorActionPreference = "Stop"
 
 if (-not $Endereco) {
-    $Endereco = Read-Host "Endereco do servidor (ex.: http://192.168.0.10:8080)"
+    $Endereco = Read-Host "Endereco do servidor (ex.: http://192.168.1.12:8080)"
 }
 
-# Procura Chrome ou Edge
-$browsers = @(
-    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
-    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe",
-    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
-    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
-)
-$browser = $browsers | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $browser) {
-    Write-Error "Nao encontrei Chrome nem Edge. Instale um deles ou crie um atalho manual para $Endereco."
+if (-not $ExePath) {
+    $cand = @(
+        (Join-Path $PSScriptRoot "Simonetto-Cliente.exe"),
+        (Join-Path $PSScriptRoot "dist\Simonetto-Cliente.exe")
+    )
+    $ExePath = $cand | Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+if (-not $ExePath -or -not (Test-Path $ExePath)) {
+    Write-Error "Nao encontrei o Simonetto-Cliente.exe. Passe o caminho com -ExePath."
     exit 1
 }
 
@@ -30,11 +30,12 @@ $lnk = Join-Path $desktop "Simonetto Devolucoes.lnk"
 
 $ws = New-Object -ComObject WScript.Shell
 $sc = $ws.CreateShortcut($lnk)
-$sc.TargetPath = $browser
-$sc.Arguments = "--app=$Endereco"
-$sc.IconLocation = "$browser,0"
+$sc.TargetPath = $ExePath
+$sc.Arguments = $Endereco
+$sc.WorkingDirectory = (Split-Path $ExePath)
+$sc.IconLocation = "$ExePath,0"
 $sc.Description = "Gerenciador de Devolucoes - Simonetto"
 $sc.Save()
 
-Write-Host "Atalho criado na Area de Trabalho: 'Simonetto Devolucoes'." -ForegroundColor Green
-Write-Host "Ele abre $Endereco em janela de app (sem barra do navegador)."
+Write-Host "Atalho 'Simonetto Devolucoes' criado na Area de Trabalho." -ForegroundColor Green
+Write-Host "Ele abre a janela nativa apontando para $Endereco"

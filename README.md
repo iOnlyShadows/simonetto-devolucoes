@@ -38,40 +38,54 @@ SIMONETTO_DATA_DIR=./.dev_data uv run python main.py
 
 ## Deploy em rede local (2 PCs)
 
-Modelo: **um** PC é o **principal** — roda o servidor e guarda o banco. O **2º PC
-não instala nada**, só abre o endereço no navegador. Os dados ficam só no principal.
+Modelo: **um** PC é o **principal** — roda o servidor e guarda o banco. Em cada PC
+(inclusive o principal) abre-se uma **janela nativa** (cliente) que conversa com o
+servidor. Os dados ficam só no principal.
 
-### 1. Gerar o executável (no PC de desenvolvimento)
+Dois executáveis (gerados pelo `build-exe.ps1`):
+- **`Simonetto-Servidor.exe`** — o servidor; vai **só no PC principal**.
+- **`Simonetto-Cliente.exe`** — a janela nativa (sem navegador); vai **nos 2 PCs**.
+
+### 1. Gerar os executáveis (no PC de desenvolvimento)
 
 ```powershell
 .\build-exe.ps1
 ```
 
-Gera `dist\Simonetto-Servidor.exe` (servidor de rede, não precisa de Python/uv no
-PC da loja). Copie esse `.exe` para o **PC principal**.
+Gera `dist\Simonetto-Servidor.exe` e `dist\Simonetto-Cliente.exe` (não precisam de
+Python/uv nos PCs da loja).
 
 ### 2. No PC principal
+
+Copie os **dois** `.exe` para uma pasta fixa (ex.: `C:\Simonetto\`).
 
 1. Liberar a porta no firewall (uma vez, como **Administrador**):
    ```powershell
    .\liberar-firewall.ps1
    ```
-2. Rodar o `Simonetto-Servidor.exe` (duplo clique). Abre um console mostrando o
-   endereço de acesso, ex.: `http://192.168.0.10:8080`. Deixe aberto durante o uso.
-3. (Opcional) iniciar sozinho ao ligar o PC:
+2. Iniciar o servidor: rode o `Simonetto-Servidor.exe` (abre um console com o
+   endereço, ex.: `http://192.168.1.12:8080`; deixe aberto). Para subir sozinho ao
+   ligar o PC:
    ```powershell
-   .\instalar-autostart.ps1 -ExePath "C:\caminho\Simonetto-Servidor.exe"
+   .\instalar-autostart.ps1 -ExePath "C:\Simonetto\Simonetto-Servidor.exe"
+   ```
+3. Criar o atalho da janela (apontando pro próprio PC):
+   ```powershell
+   .\criar-atalho-cliente.ps1 -Endereco "http://localhost:8080"
    ```
 
 ### 3. No 2º PC
 
-Criar um atalho em modo "app" (janela limpa, cara de programa nativo):
+Copie o **`Simonetto-Cliente.exe`** e crie o atalho apontando pro IP do principal:
 
 ```powershell
-.\criar-atalho-cliente.ps1 -Endereco "http://192.168.0.10:8080"
+.\criar-atalho-cliente.ps1 -Endereco "http://192.168.1.12:8080"
 ```
 
-Ou simplesmente abrir esse endereço no navegador.
+Dia a dia: **clicar no ícone "Simonetto Devoluções"** → abre a janela nativa. ✅
+
+> **IP fixo:** o IP do principal vem do roteador (DHCP) e pode mudar ao reiniciar.
+> Para o atalho não quebrar, faça uma **reserva de DHCP** no roteador (ou IP estático).
 
 ### Alternativa: rodar do código (sem gerar `.exe`)
 
