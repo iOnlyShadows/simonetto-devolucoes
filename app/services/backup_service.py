@@ -21,6 +21,10 @@ def _proxima_pasta(cfg: Config) -> Path:
 
 def criar_backup() -> Path:
     """Cria um .zip com dados.db, anexos/ e config.json. Retorna o caminho."""
+    from app.db import checkpoint_wal
+    # Garante que o WAL esteja aplicado no dados.db antes de copiá-lo
+    checkpoint_wal()
+
     cfg = Config.load()
     destino_dir = _proxima_pasta(cfg)
     # Windows tem resolucao de relogio grosseira (~15ms) — datetime.now() pode

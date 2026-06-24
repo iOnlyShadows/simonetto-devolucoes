@@ -19,13 +19,26 @@ def init_engine(database_url: Optional[str] = None) -> Engine:
         cfg = Config.load()
         database_url = f"sqlite:///{cfg.db_path}"
 
-    _engine = create_engine(database_url, echo=False, future=True)
+    connect_args = {}
+    if database_url.startswith("sqlite"):
+        # NiceGUI atende requisições em threads diferentes; permite reusar a
+        # conexão entre elas (a serialização de escrita fica com o busy_timeout).
+        connect_args["check_same_thread"] = False
 
-    # Habilita foreign keys no SQLite
+    _engine = create_engine(database_url, echo=False, future=True,
+                            connect_args=connect_args)
+
+    # PRAGMAs do SQLite aplicados a cada conexão
     @event.listens_for(_engine, "connect")
-    def _enable_fk(dbapi_conn, _):
+    def _sqlite_pragmas(dbapi_conn, _):
         cur = dbapi_conn.cursor()
         cur.execute("PRAGMA foreign_keys=ON")
+        # WAL: leitores concorrentes + 1 escritor — essencial p/ 2 PCs na rede
+        cur.execute("PRAGMA journal_mode=WAL")
+        # espera até 5s caso o banco esteja travado por uma escrita
+        cur.execute("PRAGMA busy_timeout=5000")
+        # NORMAL é seguro com WAL e bem mais rápido que FULL
+        cur.execute("PRAGMA synchronous=NORMAL")
         cur.close()
 
     _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False, future=True)
@@ -49,6 +62,20 @@ def get_engine() -> Engine:
     if _engine is None:
         init_engine()
     return _engine  # type: ignore
+
+
+def checkpoint_wal() -> None:
+    """Descarrega o WAL no arquivo principal (dados.db).
+
+    Chamado antes do backup: com WAL ligado, transações recentes ficam no
+    arquivo `dados.db-wal`; sem o checkpoint o backup do `dados.db` sozinho
+    poderia não conter as últimas alterações.
+    """
+    try:
+        with get_engine().begin() as conn:
+            conn.exec_driver_sql("PRAGMA wal_checkpoint(TRUNCATE)")
+    except Exception:
+        pass
 
 
 @contextmanager

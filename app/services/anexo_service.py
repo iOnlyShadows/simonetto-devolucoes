@@ -69,9 +69,22 @@ def thumb_url_de(anexo: Anexo) -> Optional[str]:
         except Exception:
             return None
     cfg = Config.load()
-    rel = thumb.relative_to(cfg.data_dir).as_posix()
+    rel = thumb.relative_to(cfg.anexos_dir).as_posix()
     cb = int(anexo.criado_em.timestamp()) if anexo.criado_em else 0
     return f"/dados/{rel}?t={cb}_{anexo.id}"
+
+
+def url_publica(caminho_interno: str) -> str:
+    """URL HTTP de um anexo original (a rota /dados serve a pasta de anexos).
+
+    `caminho_interno` é relativo à pasta de dados e começa com 'anexos/'.
+    """
+    rel = Path(caminho_interno)
+    try:
+        rel = rel.relative_to("anexos")
+    except ValueError:
+        pass
+    return f"/dados/{rel.as_posix()}"
 
 
 def salvar_anexo(session: Session, devolucao_id: int, origem: Path) -> Anexo:

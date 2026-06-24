@@ -1,4 +1,3 @@
-import webbrowser
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -314,8 +313,8 @@ def _documentos(dados, devolucao_id, cfg, on_change):
                 ui.label("📄")
                 ui.label(nome).style("color: var(--text-primary); font-size: 12px; flex: 1;")
                 ui.button("abrir",
-                          on_click=lambda _, c=caminho: webbrowser.open(
-                              (cfg.data_dir / c).as_uri())) \
+                          on_click=lambda _, c=caminho: ui.navigate.to(
+                              anexo_service.url_publica(c), new_tab=True)) \
                     .props("flat dense").style("font-size: 11px;")
                 def _remove(aid=aid):
                     with session_scope() as s:
